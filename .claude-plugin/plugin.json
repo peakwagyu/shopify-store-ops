@@ -1,0 +1,11 @@
+{
+  "name": "shopify-store-ops",
+  "version": "1.0.0",
+  "description": "Authenticate to and operate a live Shopify store through the Admin GraphQL API from one-off Node scripts.",
+  "author": {
+    "name": "peakwagyu"
+  },
+  "repository": "https://github.com/peakwagyu/shopify-store-ops",
+  "license": "MIT",
+  "keywords": ["shopify", "graphql", "ecommerce", "admin-api", "ops"]
+}

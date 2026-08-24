@@ -1,0 +1,20 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "peakwagyu-skills",
+  "description": "Skills for operating the Peak Wagyu Shopify store",
+  "owner": {
+    "name": "peakwagyu",
+    "url": "https://github.com/peakwagyu"
+  },
+  "plugins": [
+    {
+      "name": "shopify-store-ops",
+      "description": "Authenticate to and operate a live Shopify store through the Admin GraphQL API from one-off Node scripts.",
+      "source": "./",
+      "version": "1.0.0",
+      "license": "MIT",
+      "category": "development",
+      "tags": ["shopify", "graphql", "ecommerce", "admin-api", "ops"]
+    }
+  ]
+}
