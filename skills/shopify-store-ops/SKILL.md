@@ -105,7 +105,7 @@ Prefer a script over an interactive one-liner even for reads — it's re-runnabl
 
 When specific units should go to someone — an event order, a comp, a partner package, an invoice the customer will take days to pay — **create a draft order. Do not move inventory.**
 
-`draftOrderCreate` with `reserveInventoryUntil` (a DateTime) moves those line quantities out of `available` into the `reserved` state until that timestamp, so the storefront cannot sell them. This is Shopify's own guidance: the `inventoryMoveQuantities` docs say to use a draft order rather than manually moving units to `reserved`.
+`draftOrderCreate` with `reserveInventoryUntil` (a DateTime) moves those line quantities out of `available` into `committed` — not `reserved`, despite the field name — until that timestamp, so the storefront cannot sell them. This is Shopify's own guidance: the `inventoryMoveQuantities` docs say to use a draft order rather than manually moving units to `reserved`.
 
 ```graphql
 mutation($input: DraftOrderInput!) {
@@ -128,9 +128,10 @@ mutation($input: DraftOrderInput!) {
 - **No customer is required — and you must not invent one.** Every `DraftOrderInput` field is optional; the only constraints are at least one line item and at most 499. A dummy customer or email pollutes the customer list and reporting, and can be sent a real invoice by the admin's "Send invoice" button. Put the reason in `note` and `tags`; attach the real customer when there is one.
 - **Reservations expire silently.** On the expiry date the units flow back to `available` and go on sale, with no notification. Always tell the user the expiry date when you create one.
 - **`draftOrderCalculate` does not persist.** Use it freely to check totals, tax, discount-code eligibility and shipping rates before creating anything.
+- **Pass `acceptAutomaticDiscounts: true`** unless you deliberately want automatic discounts off. Leaving it out means `false`, and the draft's invoice checkout then skips every automatic discount (e.g. free shipping over a threshold). Check `platformDiscounts` with `draftOrderCalculate` to confirm which ones apply.
 - Discount codes work via `discountCodes`; pair with `acceptAutomaticDiscounts: false` so only the named code applies. A free-shipping code zeroes an explicit `shippingLine`, so set the real rate and let the code discount it — the order still records the shipping method for the warehouse.
-- On payment, `reserved` → `committed` automatically and it becomes a real order, visible to downstream fulfillment.
-- Verify with a read of `quantities(names: ["available","committed","reserved","on_hand","safety_stock"])` — `on_hand` unchanged, `reserved` = the order quantity. Never verify by re-running the create.
+- On payment the units stay `committed` and it becomes a real order, visible to downstream fulfillment.
+- Verify with a read of `quantities(names: ["available","committed","reserved","on_hand","safety_stock"])` — `on_hand` unchanged, `committed` up by the order quantity, `reserved` unchanged. `committed` mixes draft holds with paid-but-unfulfilled orders, so list open drafts before reading a committed unit as a sale. Never verify by re-running the create.
 
 **Don't hold stock by editing inventory.** Moving `available` → `safety_stock` is only for an indefinite hold with no recipient, and un-parking it later is a multi-step sequence with a window where a one-of-a-kind item goes back on sale. Never lower `on_hand` to hide stock — that corrupts the warehouse's count. If a task seems to need either, ask the user rather than improvising. Never hold the same units two ways at once; that double-counts them.
 
