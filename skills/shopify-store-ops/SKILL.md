@@ -137,6 +137,8 @@ mutation($input: DraftOrderInput!) {
 
 **Adding stock to an already-paid order** cannot be done with a draft — it needs an order edit (`orderEditBegin` → `orderEditAddVariant` → `orderEditCommit`), which is **not idempotent**: committing twice bills twice. Downstream fulfillment systems may also pick up an edit late or not at all, so an edit close to a shipment can miss the pick list entirely. Confirm with the user before starting one.
 
+An added line can land on its **own new fulfillment order** even at the same location as the rest of the order, which can make the warehouse pick and ship it as a separate package. After the commit, read `order.fulfillmentOrders`. If there is more than one `OPEN` at the same location, merge them with `fulfillmentOrderMerge(fulfillmentOrderMergeInputs: [{ mergeIntents: [{ fulfillmentOrderId }, { fulfillmentOrderId }] }])`. The first ID survives, and the other closes empty. Like the edit, run the merge once and verify it with a read.
+
 ## Rules
 
 Non-negotiable, and each one is here because it has already gone wrong in production:
